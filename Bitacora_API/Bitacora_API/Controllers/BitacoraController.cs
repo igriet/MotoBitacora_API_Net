@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Bitacora_API.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -10,30 +11,63 @@ namespace Bitacora_API.Controllers
     public class BitacoraController : ApiController
     {
         // GET api/<controller>
-        public IEnumerable<string> Get()
+        public IEnumerable<Registros> Get()
         {
-            return new string[] { "value1", "value2" };
+            using (var db = new BitacoraEntities())
+            {
+                return db.Registros.ToList();
+            }
         }
 
         // GET api/<controller>/5
-        public string Get(int id)
+        public Registros Get(string id)
         {
-            return "value";
+            using (var db = new BitacoraEntities())
+            {
+                return db.Registros.FirstOrDefault(x => x.id.Equals(id));
+            }
         }
 
         // POST api/<controller>
-        public void Post([FromBody]string value)
+        public IHttpActionResult Post([FromBody]Registros item)
         {
+            try
+            {
+                using (var db = new BitacoraEntities())
+                {
+                    item.id = Guid.NewGuid().ToString();
+                    item.fechaRegistro = DateTime.Now.Date;
+                    db.Registros.Add(item);
+                    db.SaveChanges();
+                }
+                return Ok(item);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest("Error al guardar el registro en la bitacora");
+            }
         }
 
         // PUT api/<controller>/5
-        public void Put(int id, [FromBody]string value)
+        public void Put(string id, [FromBody]Registros item)
         {
+            using (var db = new BitacoraEntities())
+            {
+                Registros oldValue = db.Registros.FirstOrDefault(x => x.id.Equals(id));
+                oldValue = item;
+                db.SaveChanges();
+            }
         }
 
         // DELETE api/<controller>/5
         public void Delete(int id)
         {
+            using (var db = new BitacoraEntities())
+            {
+                Registros oldValue = db.Registros.FirstOrDefault(x => x.id.Equals(id));
+                db.Registros.Remove(oldValue);
+                db.SaveChanges();
+            }
         }
     }
 }
